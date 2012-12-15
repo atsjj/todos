@@ -1,5 +1,3 @@
-require('todos/vendor/jquery-1.7.1');
-require('todos/vendor/ember-0.9.5');
 require('todos/templates/main_view');
 
 Todos = Ember.Application.create();
@@ -9,7 +7,7 @@ Todos.Todo = Ember.Object.extend({
   isDone: false
 });
 
-Todos.todosController = Ember.ArrayController.create({
+Todos.todosController = Ember.ArrayController.extend({
   content: [],
 
   createTodo: function(title) {
@@ -18,7 +16,7 @@ Todos.todosController = Ember.ArrayController.create({
   },
 
   clearCompletedTodos: function() {
-    this.filterProperty('isDone', true).forEach(this.removeObject, this);
+    this.removeObjects(this.filterProperty('isDone', true));
   },
 
   remaining: function() {
@@ -38,6 +36,40 @@ Todos.todosController = Ember.ArrayController.create({
       return !this.get('isEmpty') && this.everyProperty('isDone', true);
     }
   }.property('@each.isDone')
+}).create();
+
+Todos.CheckView = Ember.View.extend({
+  tagName: "li",
+  value: false,
+  icon: function() {
+    return (this.get("value")) ? "icon check" : "icon multiply";
+  }.property("value"),
+  click: function() {
+    this.toggleProperty("value");
+  }
+});
+
+Todos.Checkbox = Ember.View.extend({
+  classNames: ['checkbox left'],
+  
+  tagName: 'input',
+  
+  attributeBindings: ['type', 'min', 'max', 'value'],
+  
+  type: "range",
+  min: false,
+  max: true,
+  value: false,
+  
+  init: function() {
+    this._super();
+    this.on("change", this, this._updateElementValue);
+  },
+  
+  _updateElementValue: function() {
+    console.log("updated!");
+    this.set('value', this.$().val());
+  }
 });
 
 Todos.CreateTodoView = Ember.TextField.extend({
@@ -52,5 +84,14 @@ Todos.CreateTodoView = Ember.TextField.extend({
 });
 
 Todos.MainView = Ember.View.extend({
-  templateName: 'main_view'
+  elementId: "main",
+  tagName: "section",
+  templateName: 'main_view',
+  didInsertElement: function() {
+    Lungo.init({
+      name: 'todos'
+    });
+    
+    Lungo.Service.Settings.async = false;
+  }
 });
